@@ -1,0 +1,6 @@
+{
+  "name": "Inventory Management System",
+  "description": "Internal tracking system for Stock In (Inflow), Current Stock (Storage), and Stock Out (Outflow) with SQLite relational database and real-time alerts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
