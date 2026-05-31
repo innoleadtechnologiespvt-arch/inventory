@@ -2,12 +2,26 @@ import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import crypto from "crypto";
-import { initializeApp } from "firebase-admin/app";
+import { initializeApp, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { onRequest } from "firebase-functions/v2/https";
 
 // Initialize Firebase Admin
-initializeApp();
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    initializeApp({
+      credential: cert(serviceAccount)
+    });
+    console.log("Firebase Admin initialized via service account env variable.");
+  } catch (e: any) {
+    console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT:", e.message);
+    initializeApp();
+  }
+} else {
+  initializeApp();
+  console.log("Firebase Admin initialized via default credentials.");
+}
 const db = getFirestore();
 
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");
@@ -179,6 +193,17 @@ setupDatabase();
 
 const app = express();
 app.use(express.json());
+
+// Enable CORS for cross-origin frontend requests
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // --- API ROUTES ---
 
@@ -588,9 +613,9 @@ async function startServer() {
 
   // Only listen locally if not inside Firebase Cloud Functions
   if (!process.env.FIREBASE_CONFIG) {
-    const PORT = 3000;
+    const PORT = Number(process.env.PORT) || 3000;
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Local development server running on http://localhost:${PORT}`);
+      console.log(`Standalone Express server running on port ${PORT}`);
     });
   }
 }

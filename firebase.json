@@ -1,16 +1,4 @@
 {
-  "functions": {
-    "source": ".",
-    "codebase": "default",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firestore-debug.log",
-      "ui-debug.log",
-      "C:\\Users\\shakt\\.gemini\\antigravity-ide\\brain\\**"
-    ]
-  },
   "hosting": {
     "public": "dist",
     "ignore": [
@@ -19,10 +7,6 @@
       "**/node_modules/**"
     ],
     "rewrites": [
-      {
-        "source": "/api/**",
-        "function": "api"
-      },
       {
         "source": "**",
         "destination": "/index.html"
