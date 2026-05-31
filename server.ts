@@ -106,7 +106,7 @@ function requireRole(role: string) {
   };
 }
 
-// Set up the database data seeding on startup
+// Set up the database data seeding on startup (users only, no mock products)
 async function setupDatabase() {
   try {
     const usersRef = db.collection("users");
@@ -126,62 +126,6 @@ async function setupDatabase() {
         full_name: "John Smith (Warehouse)"
       });
       console.log("Seeded default users in Firestore.");
-    }
-
-    const productsRef = db.collection("products");
-    const productsSnap = await productsRef.limit(1).get();
-    
-    if (productsSnap.empty) {
-      const defaultProducts = [
-        { name: "Steel Rods 12mm", sku: "SR-12MM-001", qty: 120, min: 50, unit: "Pieces" },
-        { name: "Copper Cable 2.5mm", sku: "CC-25MM-002", qty: 45, min: 100, unit: "Meters" },
-        { name: "Aluminium Sheets (2x1m)", sku: "AS-21M-003", qty: 15, min: 20, unit: "Pieces" },
-        { name: "Hex Bolt M8", sku: "HB-M8-004", qty: 1200, min: 300, unit: "Pieces" },
-        { name: "Industrial Lubricant OIL-40", sku: "IL-OIL40-005", qty: 8, min: 15, unit: "kg" },
-      ];
-
-      for (const p of defaultProducts) {
-        const docRef = productsRef.doc();
-        const pData = {
-          product_id: docRef.id,
-          product_name: p.name,
-          sku: p.sku,
-          current_quantity: p.qty,
-          min_threshold: p.min,
-          unit: p.unit
-        };
-        await docRef.set(pData);
-
-        const now = new Date().toISOString().substring(0, 16);
-        const logRef = db.collection("stock_in").doc();
-        await logRef.set({
-          entry_id: logRef.id,
-          product_id: docRef.id,
-          sku: p.sku,
-          product_name: p.name,
-          quantity_added: p.qty + 10,
-          date: now,
-          batch_number: "BATCH-INIT-01",
-          added_by: "admin",
-          unit: p.unit
-        });
-
-        if (p.qty > 5) {
-          const outRef = db.collection("stock_out").doc();
-          await outRef.set({
-            sale_id: outRef.id,
-            product_id: docRef.id,
-            sku: p.sku,
-            product_name: p.name,
-            quantity_sold: 10,
-            customer_name: "Apex Industries Ltd",
-            date: now,
-            sold_by: "warehouse",
-            unit: p.unit
-          });
-        }
-      }
-      console.log("Seeded default products in Firestore.");
     }
   } catch (error) {
     console.error("Database initialization failed:", error);
